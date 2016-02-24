@@ -17,9 +17,15 @@ const defaultOpts = {
 function RetryAsync(connectFn, failureFn, options) {
   assert(typeof connectFn === 'function', 'you must pass the function to be called');
   assert(typeof failureFn === 'function', 'you must pass the function to be called');
+  var enableRetry = true;
+
+  if (_.isBoolean(options))
+    enableRetry = options;
 
   const opts = _.defaults(options, defaultOpts);
-  assert(opts.attempts > 0, 'attempts must be greater than 0');
+  
+  if (enableRetry)
+    assert(opts.attempts > 0, 'attempts must be greater than 0');
   
   var timer;
   var iteration;
@@ -31,6 +37,7 @@ function RetryAsync(connectFn, failureFn, options) {
 
   retry.success = initialState;
   retry.retry = retry;
+  retry.start = retry;
   retry.restart = restart;
 
   return retry;
@@ -44,14 +51,14 @@ function RetryAsync(connectFn, failureFn, options) {
     clearTimeout(timer);
     timer = null;
     iteration = 0;
-    lastDelay = opts.initialValue;
+    lastDelay = 0;
   }
 
   function retry() {
     // ignore if already has a timer scheduled
     if (timer) return;
 
-    if (iteration === opts.attempts) {
+    if (!enableRetry || iteration === opts.attempts) {
       return failureFn(iteration);
     }
 

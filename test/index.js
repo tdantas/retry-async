@@ -171,4 +171,18 @@ describe('postpone', () => {
     retryOne(); retryTwo();
   });
 
+  it('will not try to retry when last parameter is false', (done) => {
+    const retry = Retry(connect, verify, false);
+
+    function connect() { retry(); }
+
+    function verify(iteration) {
+      assert.equal(iteration, 0);
+      done();
+    }
+    
+    retry.start();
+    
+  });
+
 });

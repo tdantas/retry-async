@@ -28,7 +28,7 @@ describe('postpone', () => {
       done();
     }
     
-    retry();
+    retry.start();
   });
 
   it('respect the attempts parameter', (done) => {
@@ -46,7 +46,7 @@ describe('postpone', () => {
       done();
     }
     
-    retry();
+    retry.start();
   });
   
   it('ignore duplicate retrys', (done) => {
@@ -171,18 +171,57 @@ describe('postpone', () => {
     retryOne(); retryTwo();
   });
 
-  it('will not try to retry when last parameter is false', (done) => {
+  it('will call immediately the connect when reconnect is false', (done) => {
     const retry = Retry(connect, verify, false);
+    var times = 0;
+
+    function connect() { 
+      if (times > 0) assert(false);
+      times++; 
+      setImmediate(() => {
+        assert.equal(times, 1);
+        done(); 
+      });
+    }
+   
+    function verify() { assert(false, 'never be here'); }
+
+    retry.start();
+  });
+
+  it('will call immediately the connect when reconnect is false [function interface]', (done) => {
+    const retry = Retry(connect, verify, false);
+    var times = 0;
+
+    function connect() { 
+      if (times > 0) assert(false);
+      times++; 
+      setImmediate(() => {
+        assert.equal(times, 1);
+        done(); 
+      });
+    }
+   
+    function verify() { assert(false, 'never be here'); }
+
+    retry();
+  });
+
+
+  
+  it('fails when call retry with false', (done) => {
+    const retry = Retry(connect, verify, false);
+    var times = 0;
 
     function connect() { retry(); }
-
+   
     function verify(iteration) {
       assert.equal(iteration, 0);
       done();
     }
-    
+
     retry.start();
-    
   });
+
 
 });

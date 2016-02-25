@@ -30,6 +30,7 @@ function RetryAsync(connectFn, failureFn, options) {
   var timer;
   var iteration;
   var lastDelay;
+  var started;
   
   initialState(); // clearTimeout and set iteration to 0;
 
@@ -37,10 +38,19 @@ function RetryAsync(connectFn, failureFn, options) {
 
   retry.success = initialState;
   retry.retry = retry;
-  retry.start = retry;
+  retry.start = start;
   retry.restart = restart;
 
   return retry;
+
+  function start() {
+    started = true;
+
+    if (!enableRetry)
+      return connectFn();
+
+    retry();
+  }
 
   function restart() {
     initialState();
@@ -52,9 +62,13 @@ function RetryAsync(connectFn, failureFn, options) {
     timer = null;
     iteration = 0;
     lastDelay = 0;
+    started = false;
   }
 
   function retry() {
+    if (!started)
+        return start();
+
     // ignore if already has a timer scheduled
     if (timer) return;
 

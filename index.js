@@ -36,20 +36,20 @@ function RetryAsync(connectFn, failureFn, options) {
 
   const delayFn = opts.delayFn;
 
-  retry.success = initialState;
-  retry.retry = retry;
-  retry.start = start;
-  retry.restart = restart;
+  entryPoint.success = initialState;
+  entryPoint.retry = entryPoint.start = start;
+  entryPoint.restart = restart;
 
-  return retry;
+  return entryPoint;
+
+  function entryPoint() {
+    entryPoint.retry();
+  } 
 
   function start() {
-    started = true;
-
-    if (!enableRetry)
-      return connectFn();
-
-    retry();
+    run(iteration, 0);
+    entryPoint.retry = retry;
+    entryPoint.start = retry;
   }
 
   function restart() {
@@ -62,13 +62,10 @@ function RetryAsync(connectFn, failureFn, options) {
     timer = null;
     iteration = 0;
     lastDelay = 0;
-    started = false;
+    entryPoint.retry = entryPoint.start = start;
   }
 
   function retry() {
-    if (!started)
-        return start();
-
     // ignore if already has a timer scheduled
     if (timer) return;
 
@@ -77,12 +74,10 @@ function RetryAsync(connectFn, failureFn, options) {
     }
 
     lastDelay = delayFn(iteration++, lastDelay, opts.initialValue);
-    run(iteration, lastDelay);
+    run(iteration,  Math.min(opts.maxValue, lastDelay));
   }
 
   function run(currentIteration, delay) {
-    delay = Math.min(opts.maxValue, delay);
-
     timer = setTimeout(() => {
       clearTimeout(timer); 
       timer = null;

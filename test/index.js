@@ -16,14 +16,15 @@ describe('postpone', () => {
   it('defaults 3 times the retry', (done) => {
     const retry = Retry(connect, verify, { delayFn: delayFn });
 
-    const times = 0;
+    var times = 0;
     function connect(iteration, delay) {
       times++;
-      assert(times <= 3, 'never more than 3 times');
+      assert(times <= 4, 'never more than 3 times');
       retry();
     }
 
     function verify(iteration) {
+      assert.equal(times, 4)
       assert.equal(iteration, 3)
       done();
     }
@@ -82,7 +83,7 @@ describe('postpone', () => {
     }
 
     function verify(iteration) {
-      assert.equal(times, 4);
+      assert.equal(times, 5);
       assert.equal(iteration, 3);
       done();
     }
@@ -117,6 +118,10 @@ describe('postpone', () => {
     var delayOne;
     
     function connect(iteration, delay) { 
+      if (iteration == 0) {
+        return retry();
+      }
+      
       if (iteration == 1) {
         delayOne = delay;
         return retry();
@@ -164,7 +169,9 @@ describe('postpone', () => {
     function connectTwo(iteration, delay) { times++; retryTwo(); }
 
     function verify(iteration) {
-      assert.equal(times, 10);
+      // 2 initial start + 10 retry
+      const total = 2 + 10;
+      assert.equal(times, total);
       done();
     }
 
@@ -196,11 +203,9 @@ describe('postpone', () => {
     function connect() { 
       if (times > 0) assert(false);
       times++; 
-      setImmediate(() => {
-        assert.equal(times, 1);
-        done(); 
-      });
-    }
+      assert.equal(times, 1);
+      done(); 
+    } 
    
     function verify() { assert(false, 'never be here'); }
 

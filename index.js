@@ -61,7 +61,7 @@ function RetryAsync(connectFn, failureFn, options) {
     clearTimeout(timer);
     timer = null;
     iteration = 0;
-    lastDelay = 0;
+    lastDelay = opts.initialValue ;
     entryPoint.retry = entryPoint.start = start;
   }
 
@@ -73,8 +73,8 @@ function RetryAsync(connectFn, failureFn, options) {
       return failureFn(iteration);
     }
 
-    lastDelay = delayFn(iteration++, lastDelay, opts.initialValue);
-    run(iteration,  Math.min(opts.maxValue, lastDelay));
+    lastDelay = delayFn(lastDelay, iteration++, opts.initialValue);
+    run(iteration, Math.min(opts.maxValue, lastDelay));
   }
 
   function run(currentIteration, delay) {

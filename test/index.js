@@ -114,7 +114,7 @@ describe('postpone', () => {
 
   
   it('has default delayFn', (done) => {
-    const retry = Retry(connect, () => { done() } , { attempts: 2 });
+    const retry = Retry(connect, () => done() , { attempts: 2, initialValue: 10 });
     var delayOne;
     
     function connect(iteration, delay) { 
